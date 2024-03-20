@@ -1,9 +1,7 @@
 #ifndef AudioFeature_H
 #define AudioFeature_H
 #include <arduinoFFT.h>
-#include <Arduino.h>
 #include <math.h>
-#include <kissfft/kiss_fft.h>
 class AudioFeature{
     public:
         int Sample_rate;
@@ -13,6 +11,7 @@ class AudioFeature{
         int num_mel_bins;
         int upper_hz;
         int lower_hz;
+        int nfft;
         int audio_length;
         uint16_t* audio;
         float* _audio;
@@ -26,8 +25,8 @@ class AudioFeature{
         void _mel();
         void _normallize_audio();
         void _generate_filter_bank();
-        float *fft_input;
-        float *fft_output;
+        float *fft_r;
+        float *fft_i;
         float **_filter_bank;
         int _audio_length;
 };
