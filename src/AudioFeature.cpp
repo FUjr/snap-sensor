@@ -1,6 +1,4 @@
-#include "AudioFeature.h"
-
-
+#include "AudioFeature"
 // Hz to Mel conversion
 float hz_to_mel(float hz)
 {
@@ -12,25 +10,18 @@ float mel_to_hz(float mel)
 {
     return 700 * (pow(10, mel / 2595) - 1);
 }
-template <typename T> T abs (T r,T i) {
-    return sqrt(r*r + i*i);
-}
-
-void hann_window(float* window, int length) {
-    for (int i = 0; i < length; i++) {
-        float value = 0.5 * (1 - cos(2 * M_PI * i / (length - 1)));
-        window[i] = value;
-    }
-}
-
-AudioFeature::AudioFeature(int Sample_rate,int stft_length,int stft_step, float** output_matrix,int num_mel_bins, int audio_length,int lower_hz, int upper_hz)
+template <typename T>
+T abs(T r, T i)
 {
+    return sqrt(r * r + i * i);
+}
 
-    
+
+AudioFeature::AudioFeature(int Sample_rate, int stft_length, int stft_step, int num_mel_bins, int audio_length, int lower_hz, int upper_hz)
+{
     this->Sample_rate = Sample_rate;
     this->stft_length = stft_length;
     this->stft_step = stft_step;
-    this->output_matrix = output_matrix;
     this->num_mel_bins = num_mel_bins;
     this->audio_length = audio_length;
     this->lower_hz = lower_hz;
@@ -63,22 +54,18 @@ AudioFeature::AudioFeature(int Sample_rate,int stft_length,int stft_step, float*
 
 void AudioFeature::compute()
 {
-    this->_normallize_audio();
+    //this->_normallize_audio();
     this->_stft();
     this->_mel();
+    #ifdef DEBUG
     float max_audio = 0;
-    float max__audio = 0;
     float max_stft = 0;
     float output_max = 0;
     for (int i = 0; i < this->audio_length; i++)
     {
-        if (this->audio[i] > max_audio)
+        if (this->_audio[i] > max_audio)
         {
-            max_audio = this->audio[i];
-        }
-        if (this->_audio[i] > max__audio)
-        {
-            max__audio = this->_audio[i];
+            max_audio = this->_audio[i];
         }
     }
     for (int i = 0; i < this->nframes; i++)
@@ -101,30 +88,68 @@ void AudioFeature::compute()
             }
         }
     }
-#ifdef DEBUG
-    printf("max audio: %f, max _audio: %f, max stft: %f\n, max output: %f\n", max_audio, max__audio, max_stft, output_max);
-    //print shape of all matrix
+    
+    printf("max audio: %f, max stft: %f\n, max output: %f\n", max_audio, max_stft, output_max);
+    // print shape of all matrix
     printf("audio: %d\n", this->audio_length);
     printf("stft: %d, %d\n", this->nframes, this->nfft);
     printf("mel: %d, %d\n", this->nframes, this->num_mel_bins);
     printf("filter bank: %d, %d\n", this->nfft, this->num_mel_bins);
     printf("output: %d, %d\n", this->nframes, this->num_mel_bins);
-#endif
+    #endif
 }
 
-void AudioFeature::_normallize_audio(){
-    float* window = (float *)malloc(sizeof(float) * this->stft_length);
-    hann_window(window, this->stft_length);
-    for (int i = 0; i < this->audio_length; i++){
-        this->_audio[i] = ((float(this->audio[i]) - 32768.0) / 32768.0 + 0.0001) * window[i];
+void AudioFeature::_normallize_audio()
+{
+    float *window = (float *)malloc(sizeof(float) * this->audio_length);
+    float eps = 0.0;
+    float scale;
+    float n_scale;
+    switch (audioType)
+    {
+    case AudioType::UINT16:
+        scale = 32768;
+        n_scale = 1 / scale;
+        for (int i = 0; i < this->audio_length; i++)
+        {
+            this->_audio[i] = ((float)this->audio.u16[i] - scale)  * n_scale + eps;
+        }
+        break;
+    case AudioType::UINT32:
+        scale = pow(2, 31);
+        n_scale = 1 / scale;
+        for (int i = 0; i < this->audio_length; i++)
+        {
+            this->_audio[i] = ((float)this->audio.u32[i] - scale)  * n_scale + eps;
+        }
+        break;
+    case AudioType::FLOAT:
+        for (int i = 0; i < this->audio_length; i++)
+        {
+            this->_audio[i] = this->audio.f[i]   + eps;
+        }
+        break;
+    case AudioType::INT:
+        scale = 32768;
+        n_scale = 1 / scale;
+        for (int i = 0; i < this->audio_length; i++)
+        {
+            this->_audio[i] = ((float)this->audio.i[i] +eps )*  n_scale * 3;
+        }
+        break;
+    default:
+        break;
     }
+    // scale audio to [-1,1]
+    // apply hann window
+
     free(window);
 }
 
 void AudioFeature::_stft()
 {
-    ArduinoFFT<float> FFT = ArduinoFFT<float>(this->fft_r, this->fft_i, this->stft_length, this->Sample_rate,1);
-    FFT.windowing(this->_audio,this->audio_length,FFTWindow::Hann, FFTDirection::Forward);
+    ArduinoFFT<float> FFT = ArduinoFFT<float>(this->fft_r, this->fft_i, this->stft_length, this->Sample_rate, 0);
+    //FFT.windowing(this->_audio,this->audio_length,FFTWindow::Hann, FFTDirection::Forward);
     for (int i = 0; i < this->nframes; i++)
     {
         memset(this->stft_matrix[i], 0, sizeof(float) * this->nfft);
@@ -141,7 +166,7 @@ void AudioFeature::_stft()
 #endif
             int cpy_len;
             cpy_len = this->audio_length - i * this->stft_step;
-            memcpy(this->fft_r, this->_audio +  i * this->stft_step, sizeof(float) * cpy_len);
+            memcpy(this->fft_r, this->_audio + i * this->stft_step, sizeof(float) * cpy_len);
         }
         // for (int j = 0; j < this->stft_length; j++)
         // {
@@ -180,21 +205,21 @@ void AudioFeature::_mel()
                 sum += this->stft_matrix[i][k] * this->_filter_bank[k][j];
             }
             this->output_matrix[i][j] = sum;
-
+            //if sum = nan set to 0
         }
     }
 }
 
 void AudioFeature::_generate_filter_bank()
 {
-    
+
     float mel_upper;
     float mel_lower;
     float mel_bins[this->num_mel_bins + 2];
     float hz_bins[this->num_mel_bins + 2];
     mel_upper = hz_to_mel(upper_hz);
     mel_lower = hz_to_mel(lower_hz);
-    
+
     // Compute mel_points
     for (int i = 0; i < this->num_mel_bins + 2; i++)
     {

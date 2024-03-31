@@ -1,0 +1,11 @@
+#ifndef HomeKit_H
+#define HomeKit_H
+#include "HomeSpan.h"
+#include <WebServer.h>
+
+class HomeKit{
+    public:
+        HomeKit(void);
+        SpanCharacteristic *switchEvent;
+};
+#endif

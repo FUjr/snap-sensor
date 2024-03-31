@@ -1,0 +1,24 @@
+#ifndef TENSOR_H
+#define TENSOR_H
+#include "tensorflow/lite/micro/all_ops_resolver.h"
+#include "tensorflow/lite/micro/micro_interpreter.h"
+#include "tensorflow/lite/schema/schema_generated.h"
+#include <esp_heap_caps.h>
+
+class Tensor{
+    public:
+        int kTensorArenaSize;
+        void *model_char;
+        TfLiteTensor *input = nullptr;
+        TfLiteTensor *output = nullptr;
+        Tensor(void *model_char,int kTensorArenaSize);
+        ~Tensor();
+        void infer();
+    private:
+        const tflite::Model *model = nullptr;
+        tflite::MicroInterpreter *interpreter = nullptr;
+        uint8_t *tensor_arena;
+        void _allocateTensors();
+        void _loadModel();
+};
+#endif

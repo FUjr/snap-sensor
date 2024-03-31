@@ -1,0 +1,62 @@
+#ifndef AUDIOPROVIDER_H
+#define AUDIOPROVIDER_H
+#include <Arduino.h>
+//双循环链表
+template <typename T>  
+struct AudioChain{
+    T audioMetadata;
+    struct AudioChain *next;
+    struct AudioChain *prev;
+};
+
+enum class AudioSource{
+    ADC,
+    I2S,
+    ARRAY,
+    FILE,
+};
+
+template <typename T>
+struct AudioSourceCFG{
+    int sampleRate;
+    int chunkSize;
+    int sourceArrayLength;
+    T* sourceArray;
+    AudioSource source;
+};
+
+template <typename T>  
+struct AudioProviderCFG{
+    bool usePSRAM;
+    bool normalize;
+    int chainLength;
+    AudioSourceCFG<T> *srcCfg;
+    AudioChain<T> *head;
+    AudioChain<T> *current;
+    
+};
+
+
+template <typename T> 
+class AudioProvider{
+    public: 
+        AudioProviderCFG<T> *cfg;
+        
+        AudioProvider(AudioProviderCFG<T>* cfg);
+        ~AudioProvider();
+        void recordAudio();
+        void createAudioChain();
+        void autoPool();
+        void pool(int times);
+        static void poolWrapper(void* arg);
+        // static float typemaxvalue(void* arg);
+    protected:
+        void* _malloc_s(size_t size);
+        void _recordI2S();
+        void _recordARRAY();
+        void _recordADC();
+        void _recordFILE();
+};
+#endif
+template class AudioProvider<int>;
+template class AudioProvider<float>;

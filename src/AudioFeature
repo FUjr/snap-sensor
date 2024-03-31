@@ -2,6 +2,20 @@
 #define AudioFeature_H
 #include <arduinoFFT.h>
 #include <math.h>
+union AudioData{
+    uint16_t* u16;
+    uint32_t* u32;
+    float* f;
+    int* i;
+    };
+
+enum class AudioType{
+    UINT16,
+    UINT32,
+    FLOAT,
+    INT
+};
+
 class AudioFeature{
     public:
         int Sample_rate;
@@ -13,12 +27,13 @@ class AudioFeature{
         int lower_hz;
         int nfft;
         int audio_length;
-        uint16_t* audio;
+        AudioData audio;
+        AudioType audioType;
         float* _audio;
         float** output_matrix;
         float** stft_matrix;
         ~AudioFeature();
-        AudioFeature(int Sample_rate,int stft_length,int stft_step, float** output_matrix,int num_mel_bins, int audio_length,int lower_hz, int upper_hz);
+        AudioFeature(int Sample_rate,int stft_length,int stft_step,int num_mel_bins, int audio_length,int lower_hz, int upper_hz);
         void compute();
     protected:
         void _stft();

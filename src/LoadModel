@@ -1,0 +1,12 @@
+#ifndef LOADMODEL_H
+#define LOADMODEL_H
+#include <SPIFFS.h>
+class LoadModel
+{
+public:
+    int model_size;
+    char *model;
+    LoadModel(String filename);
+    ~LoadModel();
+};
+#endif

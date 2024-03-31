@@ -1,0 +1,15 @@
+#ifndef I2S_PREPARE_H
+#define I2S_PREPARE_H
+#include "driver/i2s.h"
+namespace i2sPrepare
+{
+    enum class micModel
+    {
+        INMP441,
+    };
+    void i2s_install(micModel mic, i2s_port_t i2s_num, int sampleRate);
+    void i2s_set_pin(i2s_port_t i2s_num, int bck, int ws, int sd);
+}
+
+
+#endif
