@@ -4,14 +4,17 @@
 #include "tensorflow/lite/micro/micro_interpreter.h"
 #include "tensorflow/lite/schema/schema_generated.h"
 #include <esp_heap_caps.h>
+#include <Arduino.h>
 
 class Tensor{
     public:
         int kTensorArenaSize;
+        bool DebugMode = false;
         void *model_char;
         TfLiteTensor *input = nullptr;
         TfLiteTensor *output = nullptr;
-        Tensor(void *model_char,int kTensorArenaSize);
+        Tensor(void *model_char,int kTensorArenaSize,bool DebugMode);
+        
         ~Tensor();
         void infer();
     private:
@@ -20,5 +23,6 @@ class Tensor{
         uint8_t *tensor_arena;
         void _allocateTensors();
         void _loadModel();
+        void _debug();
 };
 #endif
