@@ -1,5 +1,4 @@
 #include "Arduino.h"
-#include "CNN_Model.h"
 #include <esp_heap_caps.h>
 #include "i2sPrepare"
 #include "Tensor"
@@ -21,9 +20,9 @@ void setup()
   Serial.begin(115200);
   i2sPrepare::i2s_install(i2sPrepare::micModel::INMP441, I2S_NUM_0, 16000);
   i2sPrepare::i2s_set_pin(I2S_NUM_0, I2S_SCK, I2S_WS, I2S_SD);
-  homekit = new HomeKit();
   LoadModel::ModelConfig loadmodel  = LoadModel::loadModelConfig("/model_CNN.tflite","/model_config.json");
   threshold = loadmodel.threshold;
+  homekit = new HomeKit(&threshold);
   tensor = new Tensor(loadmodel.model, 1024, false);
   melSpectrogram = new AudioProcessor(
     loadmodel.fft_shift_length,
@@ -70,4 +69,6 @@ void loop()
     // printf("Time get audio feat: %d\n", time_get_audio_feat - time_loop_start);
     // printf("Time copy audio: %d\n", time_copy_audio - time_get_audio_feat);
     // printf("Time inferencing: %d\n", time_end - time_copy_audio);
+    //printf("Time total: %d\n", time_end - time_loop_start);
+    //printf("heap_caps_get_free_size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
 }

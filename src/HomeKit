@@ -5,7 +5,8 @@
 
 class HomeKit{
     public:
-        HomeKit(void);
+        float* threshold;
+        HomeKit(float *threshold);
         SpanCharacteristic *switchEvent;
 };
 #endif
