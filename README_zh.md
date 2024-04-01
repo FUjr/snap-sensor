@@ -1,7 +1,7 @@
 # 响指传感器
 
 ## 简介
-
+[使用方法](#直接使用)
 本项目使用 ```aduino``` 框架，当前代码占用大约1.5-2M内存，因此```PSRAM```暂时是必须的
 
 #### ESP32-S3 在当前音频特征和网络结构下的性能:
@@ -95,9 +95,22 @@ homespan/HomeSpan@^1.9.0
 4、打包模型和模型配置并上传到esp32的`SPI FS`
 
 5、连接ESP32发射的wifi，并进行配网
+SSID: HomeSpan-Setup
+密码 homespan
+根据提示连接你家里的wifi
+![](./img/wifi_config.png)
+设置8位setup code，不能时连续数字、不能是重复数字
+![](./img/setup_code_config.png)
 
 6、加入`Homekit` 或 `Home assistant`
+![](./img/add.png)
+忽略未经认证的设备提示，并输入之前设置的setup code
+![](./img/igore.png)
+![](./img/snap_sensor_overview.jpg)
 
+7、设置阈值
+由于homekit限制，使用灯泡亮度来设置阈值，0-100映射为0-1.0
+![](./img/set_threshold.png)
 #### 训练自己的模型
 
 1、克隆[snap detect](https://github.com/FUjr/snap_detect)仓库
@@ -223,4 +236,3 @@ classify.classify()
 classify.count_each_lable()
 classify.slice_audio()
 ```
-

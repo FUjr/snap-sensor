@@ -1,6 +1,6 @@
 # Snap Sensor
 [简体中文](./README_zh.md)
-
+[How to Use](#direct-use)
 ## Introduction
 
 This project uses the ```arduino``` framework. The current code occupies about 1.5-2M of memory, so ```PSRAM``` is temporarily required.
@@ -94,7 +94,22 @@ homespan/HomeSpan@^1.9.0
 
 5. Connect to the wifi broadcast by ESP32 and set up the network
 
-6. Join `Homekit` or `Home assistant`
+SSID: HomeSpan-Setup
+Password: homespan
+Follow the prompts to connect to your home Wi-Fi.
+![](./img/wifi_config.png)
+Set an 8-digit setup code that is not a sequence of numbers and does not repeat numbers.
+![](./img/setup_code_config.png)
+
+6. Join `Homekit` or `Home Assistant`.
+![](./img/add.png)
+Ignore the unauthenticated device prompt and enter the setup code you previously set.
+![](./img/igore.png)
+![](./img/snap_sensor_overview.jpg)
+
+7. Set the threshold.
+Due to Homekit limitations, use the brightness of the bulb to set the threshold, mapping 0-100 to 0-1.0.
+![](./img/set_threshold.png)
 
 #### Train your own model
 
