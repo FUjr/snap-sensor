@@ -4,7 +4,7 @@
 #include "AudioProvider"
 class AudioProcessor{
     public:
-        AudioProcessor(int fft_length,int fft_step,int audio_len,int sample_rate,int num_mel_bins,int upper_hz,int lower_hz,bool usePSRAM);
+        AudioProcessor(int fft_length,int fft_step,int audio_len,int sample_rate,int num_mel_bins,int lower_hz,int upper_hz,bool usePSRAM);
         ~AudioProcessor();
         AudioFeature *audioFeature;
         void update();
