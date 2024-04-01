@@ -9,6 +9,7 @@ struct ThresholdSetting : Service::LightBulb {
         threshold = threshold_ptr;
         threshold_int = *threshold * 100;
         On = new Characteristic::On();
+        new Characteristic::ConfiguredName("阈值设置");
         On->setVal(threshold_int > 0);
         Dynamic_threshold = new Characteristic::Brightness(threshold_int);
     }
@@ -34,6 +35,7 @@ HomeKit::HomeKit(float *threshold)
     new ThresholdSetting(threshold);
     SpanService *service = new Service::StatelessProgrammableSwitch(); // create a new Stateless Programmable Switch Service
     this->switchEvent = new Characteristic::ProgrammableSwitchEvent();
+    new Characteristic::ConfiguredName("响指传感器");
     homeSpan.setApTimeout(1000);
     homeSpan.enableAutoStartAP();
     homeSpan.autoPoll();
