@@ -1,12 +1,22 @@
 #ifndef LOADMODEL_H
 #define LOADMODEL_H
 #include <SPIFFS.h>
-class LoadModel
+#include <json_parser.h>
+namespace LoadModel
 {
-public:
-    int model_size;
-    char *model;
-    LoadModel(String filename);
-    ~LoadModel();
-};
+    typedef struct
+    {
+        char *model;
+        float threshold;
+        int fft_shift_length;
+        int fft_step_length;
+        int sample_rate;
+        int num_mel_bins;
+        int lower_frequency_limit;
+        int upper_frequency_limit;
+        int num_frames;
+    } ModelConfig;
+
+    ModelConfig loadModelConfig(String Model_filename,String Config_filename);
+}
 #endif
