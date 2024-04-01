@@ -1,0 +1,10 @@
+{
+    "num_frames" : 7680,
+    "num_mel_bins" : 40,
+    "upper_frequency_limit" : 6000,
+    "lower_frequency_limit" : 2000,
+    "fft_shift_length" : 1024,
+    "fft_step_length" : 256,
+    "sample_rate" : 16000,
+    "threshold" : 0.9,
+}
