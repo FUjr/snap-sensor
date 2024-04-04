@@ -6,6 +6,7 @@
 class HomeKit{
     public:
         float* threshold;
+        SpanCharacteristic *currentScore;
         HomeKit(float *threshold);
         SpanCharacteristic *switchEvent;
 };

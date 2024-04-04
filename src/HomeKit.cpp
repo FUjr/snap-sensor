@@ -9,7 +9,7 @@ struct ThresholdSetting : Service::LightBulb {
         threshold = threshold_ptr;
         threshold_int = *threshold * 100;
         On = new Characteristic::On();
-        new Characteristic::ConfiguredName("阈值设置");
+        new Characteristic::ConfiguredName("Threshold");
         On->setVal(threshold_int > 0);
         Dynamic_threshold = new Characteristic::Brightness(threshold_int);
     }
@@ -27,15 +27,18 @@ HomeKit::HomeKit(float *threshold)
     this->threshold = threshold;
     homeSpan.setStatusPixel(38, 100, 100, 100);
     homeSpan.setControlPin(13);
-    homeSpan.begin(Category::Bridges, "响指传感器");
+    homeSpan.begin(Category::Bridges, "Snap Sensor");
     new SpanAccessory();
     new Service::AccessoryInformation();
     new Characteristic::Identify();
-    new Characteristic::Name("响指传感器");
+    new Characteristic::Name("Snap Sensor");
     new ThresholdSetting(threshold);
+    SpanService *scoreService = new Service::LightSensor();
+    this->currentScore = new Characteristic::CurrentAmbientLightLevel(0);
+    new Characteristic::ConfiguredName("Score");
     SpanService *service = new Service::StatelessProgrammableSwitch(); // create a new Stateless Programmable Switch Service
     this->switchEvent = new Characteristic::ProgrammableSwitchEvent();
-    new Characteristic::ConfiguredName("响指传感器");
+    new Characteristic::ConfiguredName("Snap Sensor");
     homeSpan.setApTimeout(1000);
     homeSpan.enableAutoStartAP();
     homeSpan.autoPoll();

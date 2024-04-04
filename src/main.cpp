@@ -55,6 +55,7 @@ void loop()
     for (int j = 0; j < output_length; j++)
     {
       printf("output: %f\n", tensor->output->data.f[j]);
+      homekit->currentScore->setVal(tensor->output->data.f[j] * 100);
       if (tensor->output->data.f[j] > threshold)
       {
         if (homekit->switchEvent != nullptr)
