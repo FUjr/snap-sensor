@@ -1,6 +1,9 @@
 # Snap Sensor
 [简体中文](./README_zh.md)
+
 [How to Use](#direct-use)
+
+[CollectData Mode](#CollectData-Mode)
 ## Introduction
 
 This project uses the ```arduino``` framework. The current code occupies about 1.5-2M of memory, so ```PSRAM``` is temporarily required.
@@ -110,6 +113,22 @@ Ignore the unauthenticated device prompt and enter the setup code you previously
 7. Set the threshold.
 Due to Homekit limitations, use the brightness of the bulb to set the threshold, mapping 0-100 to 0-1.0.
 ![](./img/set_threshold.png)
+
+#### CollectData Mode
+Due to the small sample size of the dataset in the built-in model, and the fact that all recordings are made by myself, the performance might be subpar. The firmware compiled with the collectdata flag can return recorded data and predicted output to the server during runtime, which makes it convenient to collect and classify data for training your own model.
+
+1. Modify main.cpp to change the corresponding address to the collection server's address
+```C++
+#define SERVER_IP IPAddress(192, 168, 1, 141)
+#define SERVER_PORT 1234
+```
+2. Compile using the build flag in platformio.collect_data.ini
+
+3. Upload to esp32
+
+4. Use tools\collect.py for reception
+
+5. Manually classify and retrain after classification
 
 #### Train your own model
 

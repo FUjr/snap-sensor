@@ -2,6 +2,7 @@
 
 ## 简介
 [使用方法](#直接使用)
+[高级使用](#CollectData模式)
 本项目使用 ```aduino``` 框架，当前代码占用大约1.5-2M内存，因此```PSRAM```暂时是必须的
 
 #### ESP32-S3 在当前音频特征和网络结构下的性能:
@@ -111,6 +112,25 @@ SSID: HomeSpan-Setup
 7、设置阈值
 由于homekit限制，使用灯泡亮度来设置阈值，0-100映射为0-1.0
 ![](./img/set_threshold.png)
+
+#### CollectData模式
+
+由于自带模型的数据集样本量少、且都是我本人录制的，效果可能较差，以collctdata flag编译的固件可以在运行时像服务器回传录音数据和预测的输出，可以方便地采集和分类数据，用于自己模型的训练。
+
+1、修改main.cpp 将对应地址改成采集服务器的地址
+```C++
+#define SERVER_IP IPAddress(192, 168, 1, 141)
+#define SERVER_PORT 1234
+```
+2、使用platformio.collect_data.ini的build flag进行编译
+
+3、上传到esp32
+
+4、使用tools\collect.py进行接收
+
+5、手动分类后重新训练
+
+
 #### 训练自己的模型
 
 1、克隆[snap detect](https://github.com/FUjr/snap_detect)仓库
