@@ -5,6 +5,11 @@
 #include "HomeKit"
 #include "AudioProcessor"
 #include "LoadModel"
+#ifdef COLLECTDATA
+#include "DataCollector"
+#define SERVER_IP IPAddress(192, 168, 1, 141)
+#define SERVER_PORT 1234
+#endif
 
 
 #define I2S_SD 12
@@ -15,6 +20,9 @@ static HomeKit *homekit = nullptr;
 static Tensor *tensor = nullptr;
 static AudioProcessor *melSpectrogram;
 static float threshold;
+#ifdef COLLECTDATA
+static DataCollector *dataCollector = nullptr;
+#endif
 void setup()
 {
   Serial.begin(115200);
@@ -34,12 +42,25 @@ void setup()
     loadmodel.upper_frequency_limit,
     1
     );
+#ifdef COLLECTDATA
+  dataCollector = new DataCollector();
+  dataCollector->setServer(SERVER_IP, SERVER_PORT);
+#endif
 }
 
 void loop()
 {
+    
+
     unsigned long time_loop_start = millis();
     melSpectrogram->update();
+    #ifdef COLLECTDATA
+    audioData audioData;
+    audioData.data = melSpectrogram->raw_audio;
+    audioData.length = melSpectrogram->audioFeature->audio_length;
+    dataCollector->setAudio(audioData);
+    printf("Audio length: %d\n", audioData.length);
+    #endif
     unsigned long time_get_audio_feat = millis();
     for (int i = 0; i < melSpectrogram->audioFeature->nframes; i++)
     {
@@ -56,12 +77,19 @@ void loop()
     {
       printf("output: %f\n", tensor->output->data.f[j]);
       homekit->currentScore->setVal(tensor->output->data.f[j] * 100);
+      #ifdef COLLECTDATA
+      dataCollector->setScore(tensor->output->data.f[j]);
+      printf("Sending data to server\n");
+      dataCollector->send();
+      #endif
       if (tensor->output->data.f[j] > threshold)
       {
         if (homekit->switchEvent != nullptr)
         {
           homekit->switchEvent->setVal(0);
-          delay(512+ time_loop_start - time_end_infering );
+          if (time_end_infering - time_loop_start < 512){
+            delay(512 - (time_end_infering - time_loop_start));
+          }
         }
       }
     }

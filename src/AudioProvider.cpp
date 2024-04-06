@@ -76,18 +76,7 @@ void AudioProvider<T>::_recordARRAY()
     int chunk = 0;
     for (int i = 0; i < this->cfg->srcCfg->sourceArrayLength; i++)
     {
-        if (this->cfg->normalize)
-        {
-            float max_value;
-            // bool is_unsign;
-            // max_value,is_unsign = AudioProvider<T>::typemaxvalue();
-            // float one_n = 1 / max_value ? is_unsign : 2 / max_value;
-            // this->cfg->current->audioMetadata = this->cfg->srcCfg->sourceArray[i] / one_n;
-        }
-        else
-        {
-            this->cfg->current->audioMetadata = this->cfg->srcCfg->sourceArray[i];
-        }
+        this->cfg->current->audioMetadata = this->cfg->srcCfg->sourceArray[i];
         this->cfg->current = this->cfg->current->next;
         chunk++;
         if (chunk >= this->cfg->srcCfg->chunkSize)
@@ -112,16 +101,8 @@ void AudioProvider<T>::_recordI2S()
         uint8_t msb = buffer32[i * 4 + 3];
         uint16_t raw = (((uint32_t)msb) << 8) + ((uint32_t)mid);
         memcpy(&buffer16[i], &raw, sizeof(raw)); // Copy so sign bits aren't interfered with somehow.
-        if (this->cfg->normalize)
-        {
-            float one_n = 1 / 32768.0;
-            this->cfg->current->audioMetadata = buffer16[i] * one_n;
-        }
-        else
-        {
-            this->cfg->current->audioMetadata = buffer16[i];
-        }
-        //this->cfg->current->audioMetadata = buffer16[i];
+        this->cfg->current->audioMetadata = buffer16[i];
+
         this->cfg->current = this->cfg->current->next;
     }
 }

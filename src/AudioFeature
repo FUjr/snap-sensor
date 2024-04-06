@@ -2,19 +2,7 @@
 #define AudioFeature_H
 #include <arduinoFFT.h>
 #include <math.h>
-union AudioData{
-    uint16_t* u16;
-    uint32_t* u32;
-    float* f;
-    int* i;
-    };
 
-enum class AudioType{
-    UINT16,
-    UINT32,
-    FLOAT,
-    INT
-};
 
 class AudioFeature{
     public:
@@ -27,9 +15,7 @@ class AudioFeature{
         int lower_hz;
         int nfft;
         int audio_length;
-        AudioData audio;
-        AudioType audioType;
-        float* _audio;
+        float* audio;
         float** output_matrix;
         float** stft_matrix;
         ~AudioFeature();
@@ -38,7 +24,6 @@ class AudioFeature{
     protected:
         void _stft();
         void _mel();
-        void _normallize_audio();
         void _generate_filter_bank();
         float *fft_r;
         float *fft_i;

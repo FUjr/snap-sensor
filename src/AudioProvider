@@ -28,7 +28,6 @@ struct AudioSourceCFG{
 template <typename T>  
 struct AudioProviderCFG{
     bool usePSRAM;
-    bool normalize;
     int chainLength;
     AudioSourceCFG<T> *srcCfg;
     AudioChain<T> *head;
@@ -58,5 +57,6 @@ class AudioProvider{
         void _recordFILE();
 };
 #endif
+template class AudioProvider<int16_t>;
 template class AudioProvider<int>;
 template class AudioProvider<float>;

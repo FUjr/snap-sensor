@@ -17,9 +17,12 @@ class AudioProcessor{
         int upper_hz;
         int lower_hz;
         bool usePSRAM;
+        #ifdef COLLECTDATA
+        int16_t *raw_audio;
+        #endif
     private:
-        AudioProvider<float> *_audioProvider;
-        AudioChain<float> *ptr;
+        AudioProvider<int16_t> *_audioProvider;
+        AudioChain<int16_t> *ptr;
         void* _malloc_s(size_t size);
 };
 #endif

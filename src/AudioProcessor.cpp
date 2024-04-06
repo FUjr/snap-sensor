@@ -17,17 +17,19 @@ AudioProcessor::AudioProcessor(int fft_length,int fft_step,int audio_len,int sam
     this->upper_hz = upper_hz;
     this->lower_hz = lower_hz;
     this->usePSRAM = usePSRAM;
-    AudioSourceCFG<float> *srcCfg;
-    srcCfg = (AudioSourceCFG<float> *)this->_malloc_s(sizeof(AudioSourceCFG<float>));
+    #ifdef COLLECTDATA
+    this->raw_audio = (int16_t *)this->_malloc_s(sizeof(int16_t) * this->audio_len);
+    #endif
+    AudioSourceCFG<int16_t> *srcCfg;
+    srcCfg = (AudioSourceCFG<int16_t> *)this->_malloc_s(sizeof(AudioSourceCFG<int16_t>));
     srcCfg->source = AudioSource::I2S;
     // AudioProvider config
-    AudioProviderCFG<float> *cfg;
-    cfg = (AudioProviderCFG<float> *)this->_malloc_s(sizeof(AudioProviderCFG<float>));
-    cfg->chainLength = int(audio_len * 1.5);
-    cfg->normalize = 1;
+    AudioProviderCFG<int16_t> *cfg;
+    cfg = (AudioProviderCFG<int16_t> *)this->_malloc_s(sizeof(AudioProviderCFG<int16_t>));
+    cfg->chainLength = int(audio_len * 2);
     cfg->usePSRAM = this->usePSRAM;
     cfg->srcCfg = srcCfg;
-    this->_audioProvider = new AudioProvider<float>(cfg);
+    this->_audioProvider = new AudioProvider<int16_t>(cfg);
     this->_audioProvider->autoPool();
     // audio feature config
     this->audioFeature = new AudioFeature(sample_rate, fft_length, fft_step, num_mel_bins, audio_len, lower_hz, upper_hz);
@@ -36,11 +38,18 @@ AudioProcessor::AudioProcessor(int fft_length,int fft_step,int audio_len,int sam
 }
 
 void AudioProcessor::update(){
-    memset(this->audioFeature->_audio, 0, this->audio_len * sizeof(float));
+    memset(this->audioFeature->audio, 0, this->audio_len * sizeof(float));
     this->ptr = this->_audioProvider->cfg->current;
+    float normalize_k = 1.0/32768.0;
+    #ifdef COLLECTDATA
+    memset(this->raw_audio, 0, this->audio_len * sizeof(int16_t));
+    #endif
     for (int i = 0; i < this->audio_len; i++)
     {
-        this->audioFeature->_audio[this->audio_len - i] = this->ptr->audioMetadata * this->window[i];
+        #ifdef COLLECTDATA
+        this->raw_audio[this->audio_len - i] = this->ptr->audioMetadata;
+        #endif
+        this->audioFeature->audio[this->audio_len - i] = this->ptr->audioMetadata * this->window[i] * normalize_k;
         this->ptr = this->ptr->prev;
     }
     this->audioFeature->compute();
@@ -62,4 +71,7 @@ AudioProcessor::~AudioProcessor(){
     delete this->audioFeature;
     delete this->_audioProvider;
     free(this->window);
+    #ifdef COLLECTDATA
+    free(this->raw_audio);
+    #endif
 }

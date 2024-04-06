@@ -31,8 +31,8 @@ AudioFeature::AudioFeature(int Sample_rate, int stft_length, int stft_step, int 
     this->fft_r = (float *)heap_caps_malloc(sizeof(float) * this->stft_length, MALLOC_CAP_SPIRAM);
     this->fft_i = (float *)heap_caps_malloc(sizeof(float) * this->stft_length, MALLOC_CAP_SPIRAM);
     this->stft_matrix = (float **)heap_caps_malloc(sizeof(float *) * this->nframes, MALLOC_CAP_SPIRAM);
-    this->_audio = (float *)heap_caps_malloc(sizeof(float) * this->audio_length, MALLOC_CAP_SPIRAM);
-    memset(this->_audio, 0, sizeof(float) * this->audio_length);
+    this->audio= (float *)heap_caps_malloc(sizeof(float) * this->audio_length, MALLOC_CAP_SPIRAM);
+    memset(this->audio, 0, sizeof(float) * this->audio_length);
     for (int i = 0; i < this->nframes; i++)
     {
         this->stft_matrix[i] = (float *)heap_caps_malloc(sizeof(float) * this->stft_length, MALLOC_CAP_SPIRAM);
@@ -63,7 +63,7 @@ void AudioFeature::compute()
     float output_max = 0;
     for (int i = 0; i < this->audio_length; i++)
     {
-        if (this->_audio[i] > max_audio)
+        if (this->audio[i] > max_audio)
         {
             max_audio = this->_audio[i];
         }
@@ -99,57 +99,11 @@ void AudioFeature::compute()
     #endif
 }
 
-void AudioFeature::_normallize_audio()
-{
-    float *window = (float *)malloc(sizeof(float) * this->audio_length);
-    float eps = 0.0;
-    float scale;
-    float n_scale;
-    switch (audioType)
-    {
-    case AudioType::UINT16:
-        scale = 32768;
-        n_scale = 1 / scale;
-        for (int i = 0; i < this->audio_length; i++)
-        {
-            this->_audio[i] = ((float)this->audio.u16[i] - scale)  * n_scale + eps;
-        }
-        break;
-    case AudioType::UINT32:
-        scale = pow(2, 31);
-        n_scale = 1 / scale;
-        for (int i = 0; i < this->audio_length; i++)
-        {
-            this->_audio[i] = ((float)this->audio.u32[i] - scale)  * n_scale + eps;
-        }
-        break;
-    case AudioType::FLOAT:
-        for (int i = 0; i < this->audio_length; i++)
-        {
-            this->_audio[i] = this->audio.f[i]   + eps;
-        }
-        break;
-    case AudioType::INT:
-        scale = 32768;
-        n_scale = 1 / scale;
-        for (int i = 0; i < this->audio_length; i++)
-        {
-            this->_audio[i] = ((float)this->audio.i[i] +eps )*  n_scale * 3;
-        }
-        break;
-    default:
-        break;
-    }
-    // scale audio to [-1,1]
-    // apply hann window
-
-    free(window);
-}
 
 void AudioFeature::_stft()
 {
     ArduinoFFT<float> FFT = ArduinoFFT<float>(this->fft_r, this->fft_i, this->stft_length, this->Sample_rate, 0);
-    //FFT.windowing(this->_audio,this->audio_length,FFTWindow::Hann, FFTDirection::Forward);
+    //FFT.windowing(this->audio,this->audio_length,FFTWindow::Hann, FFTDirection::Forward);
     for (int i = 0; i < this->nframes; i++)
     {
         memset(this->stft_matrix[i], 0, sizeof(float) * this->nfft);
@@ -157,7 +111,7 @@ void AudioFeature::_stft()
         memset(this->fft_r, 0, sizeof(float) * this->stft_length);
         if (i * this->stft_step + this->stft_length <= this->audio_length)
         {
-            memcpy(this->fft_r, this->_audio + i * this->stft_step, sizeof(float) * this->stft_length);
+            memcpy(this->fft_r, this->audio+ i * this->stft_step, sizeof(float) * this->stft_length);
         }
         else
         {
@@ -166,12 +120,12 @@ void AudioFeature::_stft()
 #endif
             int cpy_len;
             cpy_len = this->audio_length - i * this->stft_step;
-            memcpy(this->fft_r, this->_audio + i * this->stft_step, sizeof(float) * cpy_len);
+            memcpy(this->fft_r, this->audio+ i * this->stft_step, sizeof(float) * cpy_len);
         }
         // for (int j = 0; j < this->stft_length; j++)
         // {
         //     if (i * this->stft_step + j < this->audio_length)
-        //         this->fft_input[j] = this->_audio[i * this->stft_step + j];
+        //         this->fft_input[j] = this->audio[i * this->stft_step + j];
         // }
         
         FFT.compute(FFTDirection::Forward);
@@ -259,7 +213,7 @@ AudioFeature::~AudioFeature()
     free(this->stft_matrix);
     free(this->fft_r);
     free(this->fft_i);
-    free(this->_audio);
+    free(this->audio);
     for (int i = 0; i < this->nframes; i++)
     {
         free(this->output_matrix[i]);

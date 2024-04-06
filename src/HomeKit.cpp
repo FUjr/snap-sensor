@@ -34,11 +34,11 @@ HomeKit::HomeKit(float *threshold)
     new Characteristic::Name("Snap Sensor");
     new ThresholdSetting(threshold);
     SpanService *scoreService = new Service::LightSensor();
-    this->currentScore = new Characteristic::CurrentAmbientLightLevel(0);
+    this->currentScore = new Characteristic::CurrentAmbientLightLevel(0.0001);
     new Characteristic::ConfiguredName("Score");
     SpanService *service = new Service::StatelessProgrammableSwitch(); // create a new Stateless Programmable Switch Service
     this->switchEvent = new Characteristic::ProgrammableSwitchEvent();
-    new Characteristic::ConfiguredName("Snap Sensor");
+    new Characteristic::ConfiguredName("Snap Trigger");
     homeSpan.setApTimeout(1000);
     homeSpan.enableAutoStartAP();
     homeSpan.autoPoll();
