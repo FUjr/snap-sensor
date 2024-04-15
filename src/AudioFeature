@@ -16,7 +16,7 @@ class AudioFeature{
         int nfft;
         int audio_length;
         float* audio;
-        float** output_matrix;
+        float* output_matrix;
         float** stft_matrix;
         ~AudioFeature();
         AudioFeature(int Sample_rate,int stft_length,int stft_step,int num_mel_bins, int audio_length,int lower_hz, int upper_hz);

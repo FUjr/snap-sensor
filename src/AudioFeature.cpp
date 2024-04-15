@@ -38,18 +38,19 @@ AudioFeature::AudioFeature(int Sample_rate, int stft_length, int stft_step, int 
         this->stft_matrix[i] = (float *)heap_caps_malloc(sizeof(float) * this->stft_length, MALLOC_CAP_SPIRAM);
         memset(this->stft_matrix[i], 0, sizeof(float) * this->stft_length);
     }
-    this->output_matrix = (float **)heap_caps_malloc(sizeof(float *) * this->nframes, MALLOC_CAP_SPIRAM);
-    for (int i = 0; i < this->nframes; i++)
-    {
-        this->output_matrix[i] = (float *)heap_caps_malloc(sizeof(float) * this->num_mel_bins, MALLOC_CAP_SPIRAM);
-        memset(this->output_matrix[i], 0, sizeof(float) * this->num_mel_bins);
-    }
+    this->output_matrix = (float *)heap_caps_malloc(sizeof(float) * this->nframes * this->num_mel_bins, MALLOC_CAP_SPIRAM);
+    // for (int i = 0; i < this->nframes; i++)
+    // {
+    //     this->output_matrix[i] = (float *)heap_caps_malloc(sizeof(float) * this->num_mel_bins, MALLOC_CAP_SPIRAM);
+    //     memset(this->output_matrix[i], 0, sizeof(float) * this->num_mel_bins);
+    // }
     this->_filter_bank = (float **)heap_caps_malloc(sizeof(float *) * this->nfft, MALLOC_CAP_SPIRAM);
     for (int i = 0; i < this->nfft; i++)
     {
         this->_filter_bank[i] = (float *)heap_caps_malloc(sizeof(float) * this->num_mel_bins, MALLOC_CAP_SPIRAM);
         memset(this->_filter_bank[i], 0, sizeof(float) * this->num_mel_bins);
     }
+    this->_generate_filter_bank();
 }
 
 void AudioFeature::compute()
@@ -115,19 +116,13 @@ void AudioFeature::_stft()
         }
         else
         {
-#ifdef DEBUG
+    #ifdef DEBUG
             printf("cpy_len: %d\n", this->audio_length - i * this->stft_step);
-#endif
+    #endif
             int cpy_len;
             cpy_len = this->audio_length - i * this->stft_step;
             memcpy(this->fft_r, this->audio+ i * this->stft_step, sizeof(float) * cpy_len);
         }
-        // for (int j = 0; j < this->stft_length; j++)
-        // {
-        //     if (i * this->stft_step + j < this->audio_length)
-        //         this->fft_input[j] = this->audio[i * this->stft_step + j];
-        // }
-        
         FFT.compute(FFTDirection::Forward);
         for (int j = 0; j < this->nfft; j++)
         {
@@ -138,17 +133,6 @@ void AudioFeature::_stft()
 
 void AudioFeature::_mel()
 {
-    this->_generate_filter_bank();
-#ifdef DEBUG
-    for (int i = 0; i < this->nfft; i++)
-    {
-        for (int j = 0; j < this->num_mel_bins; j++)
-        {
-            printf("%f ", this->_filter_bank[i][j]);
-        }
-        printf("\n");
-    }
-#endif
     for (int i = 0; i < this->nframes; i++)
     {
         for (int j = 0; j < this->num_mel_bins; j++)
@@ -158,7 +142,8 @@ void AudioFeature::_mel()
             {
                 sum += this->stft_matrix[i][k] * this->_filter_bank[k][j];
             }
-            this->output_matrix[i][j] = sum;
+            int flatten_index = i * this->num_mel_bins + j;
+            this->output_matrix[flatten_index] = sum;
             //if sum = nan set to 0
         }
     }
@@ -202,6 +187,16 @@ void AudioFeature::_generate_filter_bank()
             }
         }
     }
+    #ifdef DEBUG
+    for (int i = 0; i < this->nfft; i++)
+    {
+        for (int j = 0; j < this->num_mel_bins; j++)
+        {
+            printf("%f ", this->_filter_bank[i][j]);
+        }
+        printf("\n");
+    }
+    #endif
 }
 
 AudioFeature::~AudioFeature()
@@ -214,10 +209,10 @@ AudioFeature::~AudioFeature()
     free(this->fft_r);
     free(this->fft_i);
     free(this->audio);
-    for (int i = 0; i < this->nframes; i++)
-    {
-        free(this->output_matrix[i]);
-    }
+    // for (int i = 0; i < this->nframes; i++)
+    // {
+    //     free(this->output_matrix[i]);
+    // }
     free(this->output_matrix);
     for (int i = 0; i < this->nfft; i++)
     {
