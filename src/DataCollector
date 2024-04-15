@@ -1,0 +1,37 @@
+#ifndef DATACOLLECTOR_H
+#define DATACOLLECTOR_H
+#include <AsyncUDP.h>
+#include <Arduino.h>
+typedef float score_t;
+typedef struct{
+    int16_t *data;
+    size_t length;
+} audioData;
+
+typedef struct{
+    score_t score;
+    size_t audio_length;
+    time_t audio_time;
+    time_t sent_time;
+} DataHeader;
+
+class DataCollector
+{
+    public:
+        DataCollector();
+        ~DataCollector();
+        void send();
+        void setServer(IPAddress server, uint16_t port);
+        void setScore(score_t score);
+        void setAudio(audioData audio);
+    private:
+        AsyncUDP udp;
+        IPAddress server;
+        uint16_t port;
+        score_t score;
+        audioData audio;
+        time_t audio_time;
+        time_t sent_time;
+        int16_t* raw_audio;
+};
+#endif
