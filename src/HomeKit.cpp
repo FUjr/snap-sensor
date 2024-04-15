@@ -11,7 +11,7 @@ struct ThresholdSetting : Service::LightBulb {
         On = new Characteristic::On();
         new Characteristic::ConfiguredName("Threshold");
         On->setVal(threshold_int > 0);
-        Dynamic_threshold = new Characteristic::Brightness(threshold_int);
+        Dynamic_threshold = new Characteristic::Brightness(threshold_int,true);
     }
 
     boolean update(){
