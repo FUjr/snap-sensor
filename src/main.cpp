@@ -22,6 +22,7 @@ static AudioProcessor *melSpectrogram;
 static float threshold;
 #ifdef COLLECTDATA
 static DataCollector *dataCollector = nullptr;
+static audioData audioData;
 #endif
 void setup()
 {
@@ -42,33 +43,33 @@ void setup()
     loadmodel.upper_frequency_limit,
     1
     );
+  melSpectrogram->setWindow(WINDOWING::HANN);
 #ifdef COLLECTDATA
   dataCollector = new DataCollector();
   dataCollector->setServer(SERVER_IP, SERVER_PORT);
+  audioData audioData;
+  audioData.data = melSpectrogram->raw_audio;
+  audioData.length = melSpectrogram->audioFeature->audio_length;
 #endif
 }
 
 void loop()
 {
-    
-
     unsigned long time_loop_start = millis();
     melSpectrogram->update();
     #ifdef COLLECTDATA
-    audioData audioData;
-    audioData.data = melSpectrogram->raw_audio;
-    audioData.length = melSpectrogram->audioFeature->audio_length;
     dataCollector->setAudio(audioData);
     printf("Audio length: %d\n", audioData.length);
     #endif
     unsigned long time_get_audio_feat = millis();
-    for (int i = 0; i < melSpectrogram->audioFeature->nframes; i++)
-    {
-      for (int j = 0; j < melSpectrogram->audioFeature->num_mel_bins; j++)
-      {
-        tensor->input->data.f[i * melSpectrogram->audioFeature->nframes + j] = melSpectrogram->audioFeature->output_matrix[i][j];
-      }
-    }
+    // for (int i = 0; i < melSpectrogram->audioFeature->nframes; i++)
+    // {
+    //   for (int j = 0; j < melSpectrogram->audioFeature->num_mel_bins; j++)
+    //   {
+    //     tensor->input->data.f[i * melSpectrogram->audioFeature->nframes + j] = melSpectrogram->audioFeature->output_matrix[i][j];
+    //   }
+    // }
+    memcpy(tensor->input->data.f, melSpectrogram->audioFeature->output_matrix, sizeof(float) * melSpectrogram->audioFeature->nframes * melSpectrogram->audioFeature->num_mel_bins);
     unsigned long time_copy_audio = millis();
     tensor->infer();
     unsigned long time_end_infering = millis();
@@ -96,8 +97,8 @@ void loop()
     unsigned long time_end = millis();
     // printf("Time total: %d\n", time_end - time_loop_start);
     // printf("Time get audio feat: %d\n", time_get_audio_feat - time_loop_start);
-    // printf("Time copy audio: %d\n", time_copy_audio - time_get_audio_feat);
+    // // printf("Time copy audio: %d\n", time_copy_audio - time_get_audio_feat);
     // printf("Time inferencing: %d\n", time_end - time_copy_audio);
-    //printf("Time total: %d\n", time_end - time_loop_start);
-    //printf("heap_caps_get_free_size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
+    // //printf("Time total: %d\n", time_end - time_loop_start);
+    // printf("heap_caps_get_free_size: %d\n", heap_caps_get_free_size(MALLOC_CAP_SPIRAM));
 }
