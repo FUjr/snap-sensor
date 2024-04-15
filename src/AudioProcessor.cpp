@@ -1,10 +1,10 @@
 #include "AudioProcessor"
 
-void hann_window(float *window, int length)
+void hann_window(float *_window, int length)
 {
     for (int i = 0; i < length; i++)
     {
-        window[i] = 0.5 * (1 - cos(2 * M_PI * i / (length - 1)));
+        _window[i] = 0.5 * (1 - cos(2 * M_PI * i / (length - 1)));
     }
 }
 
@@ -17,6 +17,7 @@ AudioProcessor::AudioProcessor(int fft_length,int fft_step,int audio_len,int sam
     this->upper_hz = upper_hz;
     this->lower_hz = lower_hz;
     this->usePSRAM = usePSRAM;
+    this->_window = nullptr;
     #ifdef COLLECTDATA
     this->raw_audio = (int16_t *)this->_malloc_s(sizeof(int16_t) * this->audio_len);
     #endif
@@ -33,8 +34,6 @@ AudioProcessor::AudioProcessor(int fft_length,int fft_step,int audio_len,int sam
     this->_audioProvider->autoPool();
     // audio feature config
     this->audioFeature = new AudioFeature(sample_rate, fft_length, fft_step, num_mel_bins, audio_len, lower_hz, upper_hz);
-    this->window = (float *)this->_malloc_s(sizeof(float) * this->audio_len);
-    hann_window(this->window, this->audio_len);
 }
 
 void AudioProcessor::update(){
@@ -49,12 +48,32 @@ void AudioProcessor::update(){
         #ifdef COLLECTDATA
         this->raw_audio[this->audio_len - i] = this->ptr->audioMetadata;
         #endif
-        this->audioFeature->audio[this->audio_len - i] = this->ptr->audioMetadata * this->window[i] * normalize_k;
+        float window;
+        if (this->_window != nullptr)
+        {
+                window = this->_window[this->audio_len - i];      
+        }
+        else
+        {
+                window = 1.0;
+        }
+        this->audioFeature->audio[this->audio_len - i] = this->ptr->audioMetadata * normalize_k * window;
         this->ptr = this->ptr->prev;
     }
     this->audioFeature->compute();
 }
 
+void AudioProcessor::setWindow(WINDOWING window){
+    switch (window)
+    {
+    case WINDOWING::HANN:
+        this->_window = (float *)this->_malloc_s(sizeof(float) * this->audio_len);
+        hann_window(this->_window, this->audio_len);
+        break;
+    default:
+        break;
+    }
+}
 void *AudioProcessor::_malloc_s(size_t size)
 {
     if (this->usePSRAM)
@@ -70,7 +89,10 @@ void *AudioProcessor::_malloc_s(size_t size)
 AudioProcessor::~AudioProcessor(){
     delete this->audioFeature;
     delete this->_audioProvider;
-    free(this->window);
+    if (this->_window != nullptr)
+    {
+        free(this->_window);
+    }
     #ifdef COLLECTDATA
     free(this->raw_audio);
     #endif
